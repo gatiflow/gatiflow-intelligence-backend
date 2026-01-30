@@ -1,28 +1,22 @@
 #!/usr/bin/env python3
 """
-GatiFlow API
-Main entrypoint for report generation
+GatiFlow Executive Intelligence API
+B2B Market & Talent Intelligence Report Generator
 """
 
+from datetime import datetime, timezone
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, Any
-import time
-import logging
 
-from generator import generate_report
-
-# ------------------------------------------------------------------
-# App setup
-# ------------------------------------------------------------------
+from generator import generate_executive_report
 
 app = FastAPI(
-    title="GatiFlow Intelligence API",
-    description="B2B Tech Intelligence & Talent Signals",
-    version="0.1.0"
+    title="GatiFlow Executive Intelligence API",
+    description="B2B Market & Talent Intelligence Reports based on ethical public data",
+    version="1.0.0"
 )
 
-# Allow frontend access later
+# CORS (libera frontend, PDF generators, etc.)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -31,53 +25,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-
-logger = logging.getLogger("GatiFlow.API")
-
-# ------------------------------------------------------------------
-# Health check
-# ------------------------------------------------------------------
 
 @app.get("/")
-def health_check() -> Dict[str, Any]:
+def root():
     return {
-        "status": "ok",
-        "service": "GatiFlow API",
-        "timestamp": time.time()
+        "product": "GatiFlow Executive Intelligence API",
+        "status": "running",
+        "version": "1.0.0",
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
-# ------------------------------------------------------------------
-# Core endpoint
-# ------------------------------------------------------------------
 
-@app.post("/generate-report")
-def generate_intelligence_report() -> Dict[str, Any]:
+@app.get("/report")
+def get_executive_report():
     """
-    Generates a full intelligence report combining:
-    - Reddit trends
-    - StackOverflow insights
-    - GitHub talent signals
+    Generates the full executive B2B intelligence report.
+    This is the main commercial endpoint.
     """
-
-    logger.info("Generating intelligence report")
-
-    try:
-        report = generate_report()
-
-        return {
-            "success": True,
-            "generated_at": time.time(),
-            "report": report
-        }
-
-    except Exception as e:
-        logger.error(f"Report generation failed: {e}")
-
-        return {
-            "success": False,
-            "error": str(e)
-        }
+    report = generate_executive_report()
+    return report
