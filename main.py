@@ -1,46 +1,74 @@
-#!/usr/bin/env python3
-"""
-GatiFlow Executive Intelligence API
-B2B Market & Talent Intelligence Report Generator
-"""
-
-from datetime import datetime, timezone
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-from generator import generate_executive_report
+from typing import Dict, Any, List
+from generator import fetch_real_talents
 
 app = FastAPI(
-    title="GatiFlow Executive Intelligence API",
-    description="B2B Market & Talent Intelligence Reports based on ethical public data",
-    version="1.0.0"
-)
-
-# CORS (libera frontend, PDF generators, etc.)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    title="GatiFlow Talent Intelligence API",
+    description="B2B Talent Intelligence Reports based on public GitHub data",
+    version="0.1.0"
 )
 
 
 @app.get("/")
 def root():
     return {
-        "product": "GatiFlow Executive Intelligence API",
-        "status": "running",
-        "version": "1.0.0",
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "product": "GatiFlow",
+        "status": "ok",
+        "type": "Talent Intelligence API"
     }
 
 
-@app.get("/report")
-def get_executive_report():
+@app.get("/report/preview")
+def report_preview(limit: int = 6) -> Dict[str, Any]:
     """
-    Generates the full executive B2B intelligence report.
-    This is the main commercial endpoint.
+    Executive preview report for B2B clients
     """
-    report = generate_executive_report()
-    return report
+    talents = fetch_real_talents(limit=limit)
+
+    if not talents:
+        return {
+            "summary": "No data available at the moment.",
+            "insights": [],
+            "talents": []
+        }
+
+    # --- Insights simples ---
+    roles_count = {}
+    high_score = []
+
+    for t in talents:
+        role = t["role"]
+        roles_count[role] = roles_count.get(role, 0) + 1
+
+        if t["score"] >= 85:
+            high_score.append(t)
+
+    insights = []
+
+    if high_score:
+        insights.append(
+            f"{len(high_score)} talents apresentam score elevado (85+), indicando perfil sênior ou altamente influente."
+        )
+
+    most_common_role = max(roles_count, key=roles_count.get)
+    insights.append(
+        f"O papel mais recorrente entre os talentos analisados é: {most_common_role}."
+    )
+
+    insights.append(
+        "Os dados indicam forte presença de profissionais com atividade consistente em projetos públicos."
+    )
+
+    # --- Resumo executivo ---
+    summary = (
+        f"Este relatório apresenta uma amostra qualificada de {len(talents)} "
+        "profissionais de tecnologia com base em dados públicos do GitHub. "
+        "O objetivo é apoiar decisões estratégicas de recrutamento, mapeamento "
+        "de mercado e inteligência de talentos."
+    )
+
+    return {
+        "summary": summary,
+        "insights": insights,
+        "talents": talents
+    }
