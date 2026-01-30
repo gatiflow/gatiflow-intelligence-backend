@@ -79,3 +79,115 @@ O GatiFlow **é**:
 - baseada em sinais reais e públicos
 - com metodologia transparente
 - pensada para decisões B2B
+## 📄 Estrutura do Relatório Vendável (MVP)
+
+O primeiro produto do GatiFlow é um **Relatório de Inteligência Técnica**,
+gerado sob demanda, com base em dados públicos do GitHub.
+
+O relatório é estruturado para apoiar **decisões reais de negócio**,
+não apenas curiosidade técnica.
+
+---
+
+### 1️⃣ Visão Geral do Mercado Técnico
+
+**Objetivo:**  
+Oferecer uma visão macro do cenário técnico analisado.
+
+**Conteúdo:**
+- Volume total de perfis analisados
+- Principais stacks tecnológicas identificadas
+- Distribuição geográfica dos talentos
+- Nível médio de senioridade técnica
+
+**Dados utilizados (backend):**
+- `search_users()` — volume e filtros
+- Linguagens inferidas via query
+- Localização dos perfis
+- Score médio (`calculate_score`)
+
+---
+
+### 2️⃣ Ranking de Talentos Técnicos
+
+**Objetivo:**  
+Identificar os profissionais tecnicamente mais relevantes no recorte analisado.
+
+**Conteúdo:**
+- Lista ordenada por score técnico
+- Nome / username
+- Role inferido
+- Score GatiFlow (65–99)
+- Link para o perfil público
+
+**Dados utilizados (backend):**
+- `fetch_talents()`
+- `calculate_score()`
+- `_infer_role()`
+
+---
+
+### 3️⃣ Distribuição de Senioridade
+
+**Objetivo:**  
+Entender a maturidade técnica do mercado.
+
+**Faixas sugeridas:**
+- 90–99 → Lideranças técnicas / referência
+- 80–89 → Sênior
+- 70–79 → Pleno
+- 65–69 → Júnior / emergente
+
+**Dados utilizados (backend):**
+- Score final por perfil
+
+---
+
+### 4️⃣ Análise de Especialização Técnica
+
+**Objetivo:**  
+Mapear quais perfis dominam quais áreas técnicas.
+
+**Conteúdo:**
+- Agrupamento por role inferido
+- Frequência de cada especialização
+- Perfis destaque por área
+
+**Dados utilizados (backend):**
+- `_infer_role()`
+- Bio + métricas de perfil
+
+---
+
+### 5️⃣ Insights Estratégicos (Parte Mais Valiosa)
+
+**Objetivo:**  
+Transformar dados técnicos em recomendações de negócio.
+
+**Exemplos de insights:**
+- Onde estão talentos subexplorados
+- Regiões com alta densidade técnica e baixo custo
+- Comunidades técnicas emergentes
+- Riscos de escassez em determinadas stacks
+
+**Dados utilizados (backend):**
+- Agregações sobre scores
+- Distribuição geográfica
+- Roles + senioridade
+
+---
+
+### 6️⃣ Metodologia & Transparência
+
+**Objetivo:**  
+Gerar confiança no cliente.
+
+**Conteúdo:**
+- Fonte dos dados (GitHub público)
+- Critérios de pontuação
+- Limitações do modelo
+- Uso ético dos dados
+
+**Dados utilizados (backend):**
+- Documentação do algoritmo
+- `calculate_score()` explicado
