@@ -1,67 +1,83 @@
 #!/usr/bin/env python3
 """
-GatiFlow – Main Runner
-
-Executa a coleta de dados e gera o relatório B2B
-em um único comando.
+GatiFlow API
+Main entrypoint for report generation
 """
 
-import json
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from typing import Dict, Any
+import time
 import logging
-from datetime import datetime
-from pathlib import Path
 
-# Coletores
-from devto_collector import collect_devto_data
-from reddit_collector import collect_reddit_data
-from stackoverflow_collector import collect_stackoverflow_data
-from talent_hunter import fetch_real_talents
+from generator import generate_report
 
-# Gerador de relatório
-from reports.generator import generate_report
+# ------------------------------------------------------------------
+# App setup
+# ------------------------------------------------------------------
 
+app = FastAPI(
+    title="GatiFlow Intelligence API",
+    description="B2B Tech Intelligence & Talent Signals",
+    version="0.1.0"
+)
 
-# -------------------------------------------------------------------
-# Configuração básica
-# -------------------------------------------------------------------
+# Allow frontend access later
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
-OUTPUT_DIR = Path("output")
-OUTPUT_DIR.mkdir(exist_ok=True)
+logger = logging.getLogger("GatiFlow.API")
 
+# ------------------------------------------------------------------
+# Health check
+# ------------------------------------------------------------------
 
-# -------------------------------------------------------------------
-# Execução principal
-# -------------------------------------------------------------------
-
-def main():
-    logging.info("GatiFlow — starting data collection")
-
-    raw_data = {
-        "devto": collect_devto_data(limit=5).get("trends", []),
-        "reddit": collect_reddit_data(limit=5).get("trends", []),
-        "stackoverflow": collect_stackoverflow_data(limit=5).get("trends", []),
-        "github_talents": fetch_real_talents(limit=5),
+@app.get("/")
+def health_check() -> Dict[str, Any]:
+    return {
+        "status": "ok",
+        "service": "GatiFlow API",
+        "timestamp": time.time()
     }
 
-    logging.info("Data collection finished")
-    logging.info("Generating intelligence report")
+# ------------------------------------------------------------------
+# Core endpoint
+# ------------------------------------------------------------------
 
-    report = generate_report(raw_data)
+@app.post("/generate-report")
+def generate_intelligence_report() -> Dict[str, Any]:
+    """
+    Generates a full intelligence report combining:
+    - Reddit trends
+    - StackOverflow insights
+    - GitHub talent signals
+    """
 
-    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    output_file = OUTPUT_DIR / f"gatiflow_report_{timestamp}.json"
+    logger.info("Generating intelligence report")
 
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(report, f, indent=2, ensure_ascii=False)
+    try:
+        report = generate_report()
 
-    logging.info(f"Report generated successfully: {output_file}")
-    logging.info("GatiFlow — execution completed")
+        return {
+            "success": True,
+            "generated_at": time.time(),
+            "report": report
+        }
 
+    except Exception as e:
+        logger.error(f"Report generation failed: {e}")
 
-if __name__ == "__main__":
-    main()
+        return {
+            "success": False,
+            "error": str(e)
+        }
