@@ -24,6 +24,16 @@ def init_db():
         )
     """)
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS usage_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            api_key TEXT,
+            endpoint TEXT,
+            method TEXT,
+            timestamp TEXT
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -46,6 +56,24 @@ def reset_if_new_day(api_key: str):
             SET requests = 0, last_reset = ?
             WHERE api_key = ?
         """, (today, api_key))
+
+    conn.commit()
+    conn.close()
+
+
+def log_usage(api_key: str, endpoint: str, method: str):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO usage_logs (api_key, endpoint, method, timestamp)
+        VALUES (?, ?, ?, ?)
+    """, (
+        api_key,
+        endpoint,
+        method,
+        datetime.utcnow().isoformat()
+    ))
 
     conn.commit()
     conn.close()
