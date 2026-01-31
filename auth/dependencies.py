@@ -1,8 +1,10 @@
-from fastapi import Header, HTTPException, Response
+from fastapi import Header, HTTPException, Response, Request
 from auth.api_key import api_key_store
+from auth.storage import log_usage
 
 
 def require_api_key(
+    request: Request,
     response: Response,
     x_api_key: str = Header(...)
 ):
@@ -19,6 +21,12 @@ def require_api_key(
         )
 
     api_key_store.register_request(x_api_key)
+
+    log_usage(
+        api_key=x_api_key,
+        endpoint=request.url.path,
+        method=request.method
+    )
 
     stats = api_key_store.stats(x_api_key)
 
