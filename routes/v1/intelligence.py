@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends
+
 from auth.dependencies import require_api_key
 from reports.generator import generate_report
 
 router = APIRouter(
-    prefix="/v1/intelligence",
+    prefix="/intelligence",
     tags=["Intelligence"]
 )
 
