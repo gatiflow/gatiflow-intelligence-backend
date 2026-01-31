@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, Request
-from auth.api_key import get_api_key
+from fastapi import APIRouter, Depends
+from auth.dependencies import require_api_key
 from reports.generator import generate_report
 
 router = APIRouter(
@@ -8,21 +8,10 @@ router = APIRouter(
 )
 
 
-@router.post("/report")
-def generate_intelligence_report(
-    request: Request,
-    api_key: str = Depends(get_api_key)
-):
-    dummy_data = {
-        "github": [],
-        "reddit": [],
-        "hackernews": []
-    }
-
-    report = generate_report(dummy_data)
-
-    return {
-        "status": "success",
-        "plan": request.state.plan,
-        "data": report
-    }
+@router.get("/report")
+def get_intelligence_report(api_key: str = Depends(require_api_key)):
+    """
+    Returns a consolidated B2B intelligence report.
+    Access protected by API Key.
+    """
+    return generate_report()
