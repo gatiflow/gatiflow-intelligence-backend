@@ -1,39 +1,28 @@
-from fastapi import APIRouter, Depends
-from auth.api_key import verify_api_key
-from schemas.intelligence_report import intelligence_report_schema
-from schemas.response import response_envelope
+from fastapi import APIRouter, Depends, Request
+from auth.api_key import get_api_key
+from reports.generator import generate_report
 
 router = APIRouter(
     prefix="/v1/intelligence",
-    tags=["Intelligence v1"],
-    dependencies=[Depends(verify_api_key)]
+    tags=["Intelligence"]
 )
 
 
-@router.get("/report")
-def get_intelligence_report():
-    market_trends = [
-        {"trend": "AI Adoption", "growth": "+42%", "source": "GitHub"},
-        {"trend": "Cloud Native", "growth": "+28%", "source": "CNCF"}
-    ]
+@router.post("/report")
+def generate_intelligence_report(
+    request: Request,
+    api_key: str = Depends(get_api_key)
+):
+    dummy_data = {
+        "github": [],
+        "reddit": [],
+        "hackernews": []
+    }
 
-    talent_signals = [
-        {"skill": "Python", "demand": "High", "source": "GitHub"},
-        {"skill": "Data Engineering", "demand": "Rising", "source": "StackOverflow"}
-    ]
+    report = generate_report(dummy_data)
 
-    hiring_signals = [
-        {"role": "AI Engineer", "openings": 1200, "region": "Global"},
-        {"role": "Data Engineer", "openings": 860, "region": "North America"}
-    ]
-
-    report = intelligence_report_schema(
-        market_trends=market_trends,
-        talent_signals=talent_signals,
-        hiring_signals=hiring_signals
-    )
-
-    return response_envelope(
-        data=report.dict(),
-        message="Intelligence report generated successfully"
-    )
+    return {
+        "status": "success",
+        "plan": request.state.plan,
+        "data": report
+    }
