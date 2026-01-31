@@ -8,10 +8,13 @@ router = APIRouter(
 
 
 @router.post("/api-keys")
-def create_api_key(owner: str):
+def create_api_key(owner: str, daily_limit: int = 1000):
     """
-    Generates a new API Key for a client (MVP admin endpoint).
+    Generates a new API Key with configurable rate limit.
     """
     return {
-        "api_key": api_key_store.generate_key(owner)
+        "api_key": api_key_store.generate_key(
+            owner=owner,
+            limit=daily_limit
+        )
     }
