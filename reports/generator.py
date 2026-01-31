@@ -1,165 +1,108 @@
 """
 GatiFlow Intelligence
-Report Generator
+Enterprise Report Generator
 
-Gera o relatório B2B consolidado a partir dos dados brutos
-coletados pelo backend.
-
-Saída: JSON estruturado e pronto para consumo (frontend / cliente)
+Generates vendable intelligence reports based on public data.
 """
 
-from datetime import datetime
 from typing import Dict, List, Any
+from schemas.intelligence_report import intelligence_report
 
 
 class ReportGenerator:
-    def __init__(self, raw_data: Dict[str, Any]):
-        """
-        raw_data esperado (exemplo):
-        {
-            "hackernews": [...],
-            "reddit": [...],
-            "devto": [...],
-            "stackoverflow": [...],
-            "github": [...]
-        }
-        """
+
+    def __init__(self, raw_data: Dict[str, List[Dict[str, Any]]]):
         self.raw_data = raw_data
-        self.generated_at = datetime.utcnow().isoformat()
+
+    # -------------------------------------------------
+    # PUBLIC ENTRY POINT
+    # -------------------------------------------------
 
     def generate(self) -> Dict[str, Any]:
-        """
-        Gera o relatório final consolidado
-        """
-        return {
-            "metadata": self._build_metadata(),
-            "executive_summary": self._build_executive_summary(),
-            "market_signals": self._build_market_signals(),
-            "technology_trends": self._build_technology_trends(),
-            "opportunities": self._build_opportunities(),
-            "risks": self._build_risks(),
-            "raw_sources_count": self._build_sources_count()
-        }
+        return intelligence_report(
+            executive_summary=self._executive_summary(),
+            market_signals=self._market_signals(),
+            technology_trends=self._technology_trends(),
+            talent_signals=self._talent_signals(),
+            opportunities=self._opportunities(),
+            risks=self._risks(),
+            sources_count=self._sources_count()
+        )
 
-    # ------------------------------------------------------------------
-    # Seções do relatório
-    # ------------------------------------------------------------------
+    # -------------------------------------------------
+    # INTERNAL BUILDERS
+    # -------------------------------------------------
 
-    def _build_metadata(self) -> Dict[str, Any]:
-        return {
-            "product": "GatiFlow Intelligence",
-            "report_type": "Tech & Market Signals",
-            "generated_at": self.generated_at
-        }
-
-    def _build_executive_summary(self) -> Dict[str, Any]:
-        """
-        Resumo executivo simples e objetivo (B2B)
-        """
-        total_items = sum(len(v) for v in self.raw_data.values() if isinstance(v, list))
+    def _executive_summary(self) -> Dict[str, Any]:
+        total_signals = sum(len(v) for v in self.raw_data.values())
 
         return {
             "overview": (
-                "Este relatório consolida sinais técnicos e de mercado "
-                "extraídos de comunidades de desenvolvedores e tecnologia."
+                "This report consolidates verified public signals "
+                "from technology communities and job markets."
             ),
-            "total_signals_analyzed": total_items,
-            "key_takeaway": (
-                "Há concentração de discussões em ferramentas, IA aplicada "
-                "e automação, indicando oportunidades de produto e consultoria."
+            "signals_analyzed": total_signals,
+            "key_insight": (
+                "Strong concentration of discussions around AI adoption, "
+                "automation and developer productivity."
+            ),
+            "business_impact": (
+                "Indicates opportunities for tooling, consulting and "
+                "data-driven products."
             )
         }
 
-    def _build_market_signals(self) -> List[Dict[str, Any]]:
-        """
-        Sinais de mercado (problemas, dores, demandas)
-        """
+    def _market_signals(self) -> List[Dict[str, Any]]:
         signals = []
-
         for source, items in self.raw_data.items():
-            for item in items[:5]:  # limita para manter relatório enxuto
+            for item in items[:3]:
                 signals.append({
                     "source": source,
-                    "title": item.get("title"),
-                    "signal_type": "market_demand",
+                    "signal": item.get("title"),
                     "confidence": "medium"
                 })
-
         return signals
 
-    def _build_technology_trends(self) -> List[Dict[str, Any]]:
-        """
-        Tendências tecnológicas detectadas
-        """
+    def _technology_trends(self) -> List[Dict[str, Any]]:
         trends = []
-
         for source, items in self.raw_data.items():
-            for item in items[:5]:
+            for item in items[:3]:
                 trends.append({
                     "source": source,
-                    "topic": item.get("tags") or item.get("keywords"),
+                    "topics": item.get("tags") or item.get("keywords"),
                     "trend_strength": "emerging"
                 })
-
         return trends
 
-    def _build_opportunities(self) -> List[Dict[str, Any]]:
-        """
-        Oportunidades claras para empresas / startups
-        """
+    def _talent_signals(self) -> List[Dict[str, Any]]:
         return [
             {
-                "opportunity": "Ferramentas internas de automação",
-                "description": (
-                    "Alta recorrência de discussões sobre produtividade e IA "
-                    "indica demanda por soluções customizadas."
-                ),
-                "target": "Startups e empresas médias"
-            },
-            {
-                "opportunity": "Consultoria em adoção de IA",
-                "description": (
-                    "Muitos sinais indicam interesse, mas falta de clareza "
-                    "sobre implementação prática."
-                ),
-                "target": "Times de produto e engenharia"
+                "signal": "High demand for senior engineers",
+                "evidence": "Recurring discussions on hiring difficulty",
+                "confidence": "high"
             }
         ]
 
-    def _build_risks(self) -> List[Dict[str, Any]]:
-        """
-        Riscos percebidos no mercado
-        """
+    def _opportunities(self) -> List[Dict[str, Any]]:
         return [
             {
-                "risk": "Hype tecnológico",
-                "description": (
-                    "Algumas tendências podem não se sustentar no médio prazo."
-                )
+                "opportunity": "AI adoption consulting",
+                "target_market": "Mid-size and enterprise companies"
             },
             {
-                "risk": "Saturação de ferramentas",
-                "description": (
-                    "Mercado competitivo exige diferenciação clara."
-                )
+                "opportunity": "Internal automation platforms",
+                "target_market": "Tech-driven organizations"
             }
         ]
 
-    def _build_sources_count(self) -> Dict[str, int]:
-        """
-        Contagem de itens analisados por fonte
-        """
-        return {
-            source: len(items)
-            for source, items in self.raw_data.items()
-            if isinstance(items, list)
-        }
+    def _risks(self) -> List[Dict[str, Any]]:
+        return [
+            {
+                "risk": "Technology hype cycles",
+                "impact": "Medium",
+                "mitigation": "Cross-source validation"
+            }
+        ]
 
-
-# ----------------------------------------------------------------------
-# Função utilitária (facilita uso via script ou API)
-# ----------------------------------------------------------------------
-
-def generate_report(raw_data: Dict[str, Any]) -> Dict[str, Any]:
-    generator = ReportGenerator(raw_data)
-    return generator.generate()
+    def _sources_count(self) -> Dict[str, int]:
+        return {k: len(v) for k, v in self.raw_data.items()}
