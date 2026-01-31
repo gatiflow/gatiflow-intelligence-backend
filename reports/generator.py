@@ -11,12 +11,19 @@ from typing import Dict, Any, List
 import logging
 
 # -------------------------------------------------
+# Logging
+# -------------------------------------------------
+
+logger = logging.getLogger("GatiFlow.ReportGenerator")
+
+# -------------------------------------------------
 # Mock / Data Providers (substituíveis futuramente)
 # -------------------------------------------------
 
 def fetch_real_talents(limit: int = 6) -> List[Dict[str, Any]]:
     """
-    Simula coleta de talentos técnicos (GitHub, etc)
+    Simula coleta de talentos técnicos (GitHub, fóruns públicos, etc).
+    Nenhum dado pessoal ou privado é utilizado.
     """
     return [
         {
@@ -29,27 +36,29 @@ def fetch_real_talents(limit: int = 6) -> List[Dict[str, Any]]:
 
 
 def collect_market_trends(limit: int = 5) -> List[Dict[str, Any]]:
-    return [
+    """
+    Simula detecção de tendências de mercado a partir de fontes públicas.
+    """
+    trends = [
         {"topic": "AI Automation", "signal_strength": "high"},
         {"topic": "Data Engineering", "signal_strength": "medium"},
         {"topic": "Cloud Cost Optimization", "signal_strength": "medium"},
-    ][:limit]
-
+        {"topic": "Internal Developer Platforms", "signal_strength": "emerging"},
+        {"topic": "MLOps Tooling", "signal_strength": "emerging"},
+    ]
+    return trends[:limit]
 
 # -------------------------------------------------
 # Report Generator
 # -------------------------------------------------
 
-logger = logging.getLogger("GatiFlow.ReportGenerator")
-
-
 def generate_report(limit: int = 6) -> Dict[str, Any]:
     """
     Gera um relatório de inteligência pronto para:
     - API REST
-    - WebSocket
-    - Consumo frontend
+    - Consumo por frontend
     - Entrega B2B
+    - Auditoria e compliance
     """
 
     generated_at = datetime.now(timezone.utc).isoformat()
@@ -58,14 +67,14 @@ def generate_report(limit: int = 6) -> Dict[str, Any]:
     market_trends = collect_market_trends()
 
     scores = [t["score"] for t in talents]
-
     average_score = round(sum(scores) / len(scores), 2) if scores else 0
     top_score = max(scores) if scores else 0
 
     # -------------------------------------------------
     # Strategic Insights
     # -------------------------------------------------
-    strategic_insights = []
+
+    strategic_insights: List[str] = []
 
     if average_score >= 80:
         strategic_insights.append(
@@ -87,23 +96,28 @@ def generate_report(limit: int = 6) -> Dict[str, Any]:
         )
 
     # -------------------------------------------------
-    # Final Report
+    # Final Report (Contrato B2B)
     # -------------------------------------------------
-    report = {
+
+    report: Dict[str, Any] = {
         "metadata": {
             "product": "GatiFlow Intelligence",
             "report_type": "Market & Talent Intelligence",
-            "generated_at": generated_at,
-            "version": "1.0"
+            "version": "1.0",
+            "generated_at": generated_at
         },
-        "market_overview": {
+        "overview": {
             "total_profiles_analyzed": len(talents),
             "average_score": average_score,
             "top_score": top_score
         },
-        "top_talents": sorted(talents, key=lambda x: x["score"], reverse=True),
-        "strategic_insights": strategic_insights,
+        "talent_signals": sorted(
+            talents,
+            key=lambda x: x["score"],
+            reverse=True
+        ),
         "market_trends": market_trends,
+        "strategic_insights": strategic_insights,
         "methodology": {
             "data_sources": [
                 "Public GitHub activity",
@@ -111,8 +125,8 @@ def generate_report(limit: int = 6) -> Dict[str, Any]:
             ],
             "scoring_range": "65–99",
             "ethical_notice": (
-                "All data is derived from public sources with no use of "
-                "private or personal information."
+                "All insights are derived exclusively from public sources. "
+                "No private, personal, or sensitive data is collected or processed."
             )
         }
     }
