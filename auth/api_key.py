@@ -1,61 +1,36 @@
-from fastapi import Header, HTTPException, Request
-from typing import Optional, Dict
-import time
-
-# Simples e intencionalmente estático (MVP)
-API_KEYS: Dict[str, Dict] = {
-    "free-demo-key": {
-        "plan": "free",
-        "rate_limit": 60  # requests / minute
-    },
-    "pro-demo-key": {
-        "plan": "pro",
-        "rate_limit": 300
-    },
-    "enterprise-demo-key": {
-        "plan": "enterprise",
-        "rate_limit": 2000
-    }
-}
-
-# Controle em memória (suficiente para MVP)
-RATE_LIMIT_BUCKET: Dict[str, Dict] = {}
+from datetime import datetime
+from typing import Dict
+import uuid
 
 
-def get_api_key(
-    request: Request,
-    x_api_key: Optional[str] = Header(None)
-):
-    if not x_api_key or x_api_key not in API_KEYS:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or missing API Key"
-        )
+class APIKeyStore:
+    """
+    Simple in-memory API Key store (MVP).
+    Can be replaced later by Redis / Database without breaking contracts.
+    """
 
-    plan_data = API_KEYS[x_api_key]
-    limit = plan_data["rate_limit"]
-    window = 60  # seconds
-    now = time.time()
+    def __init__(self):
+        self.keys: Dict[str, Dict] = {}
 
-    bucket = RATE_LIMIT_BUCKET.setdefault(x_api_key, {
-        "count": 0,
-        "reset": now + window
-    })
+    def generate_key(self, owner: str) -> str:
+        api_key = f"gf_{uuid.uuid4().hex}"
+        self.keys[api_key] = {
+            "owner": owner,
+            "created_at": datetime.utcnow().isoformat(),
+            "requests": 0,
+            "active": True,
+        }
+        return api_key
 
-    if now > bucket["reset"]:
-        bucket["count"] = 0
-        bucket["reset"] = now + window
+    def validate(self, api_key: str) -> bool:
+        return api_key in self.keys and self.keys[api_key]["active"]
 
-    if bucket["count"] >= limit:
-        raise HTTPException(
-            status_code=429,
-            detail="Rate limit exceeded"
-        )
+    def register_request(self, api_key: str):
+        if api_key in self.keys:
+            self.keys[api_key]["requests"] += 1
 
-    bucket["count"] += 1
+    def stats(self, api_key: str) -> Dict:
+        return self.keys.get(api_key, {})
 
-    request.state.plan = plan_data["plan"]
-    request.state.rate_limit = limit
-    request.state.rate_remaining = limit - bucket["count"]
 
-    return x_api_key
+api_key_store = APIKeyStore()
